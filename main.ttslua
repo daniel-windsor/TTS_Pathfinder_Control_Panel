@@ -1,0 +1,138 @@
+thick = 0.14
+
+playerNum = 1
+
+function onLoad()
+
+  initButtonsTable()
+  initButtons()
+
+  generateButtonParams()
+
+  for k, v in pairs(buttons) do
+    if k == 'setPlayerNum' then
+      buttons.values[k] = 'Players: ' .. playerNum
+    elseif k == 'createGame' then
+      buttons.values[k] = 'Create Game'
+    elseif k == 'shuffleAll' then
+      buttons.values[k] = 'Shuffle All'
+    elseif k == 'endGame' then
+      buttons.values[k] = 'End Game'
+    elseif k == 'clearDiscard' then
+      buttons.values[k] = 'Clear Discard Zone'
+    end
+  end
+
+  updateDisplay(true)
+
+end
+
+function initButtons()
+  dx = -7; dy = -6
+  createCounter('setPlayerNum', 'bigBtn', dx, dy)
+
+  dx = -7; dy = -3
+  createCounter('shuffleAll', 'bigBtn', dx, dy)
+
+  dx = -7; dy = 0
+  createCounter('createGame', 'bigBtn', dx, dy)
+
+  dx = -7; dy = 3
+  createCounter('endGame', 'bigBtn', dx, dy)
+
+  dx = 0; dy = 6
+  createCounter('clearDiscard', 'hugeBtn', dx, dy)
+end
+
+function initButtonsTable()
+  buttons = {}
+  buttons.index = 0
+  buttons.values = {}
+  buttons.params = {}
+  buttons.params.positions = {}
+  buttons.params.rotation = {}
+  buttons.params.sizes = {}
+  buttons.targetFunc = {}
+
+  buttons.params.sizes.bigBtn = {
+    display = {height = 800, width = 4000, font = 500}
+  }
+  buttons.params.sizes.hugeBtn = {
+    display = {height = 800, width = 10750, font = 500}
+  }
+end
+
+function generateButtonParams()
+  for k, v in pairs(buttons) do
+    if k ~= 'index' and k ~= 'values' and k ~= 'params' and k ~= 'targetFunc' then
+      buttons[k].display = setupButton(tostring(k), buttons.params.positions[k], buttons.params.sizes[buttons[k].type].display)
+    end
+  end
+end
+
+function createCounter(name, type, px, py)
+  buttons[name] = {type = type}
+	buttons.params.positions[name] = {x = px, y = thick, z = py}
+end
+
+function setupButton(targetFunc, positions, sizes)
+  local buttonInfo = {}
+  buttonInfo.function_owner = self
+  buttonInfo.index = buttons.index
+  buttonInfo.click_function = targetFunc
+  buttonInfo.position = {positions.x, positions.y, positions.z}
+  buttonInfo.rotation = {0, 0, 0}
+  buttonInfo.width = sizes.width
+  buttonInfo.height = sizes.height
+  buttonInfo.font_size = sizes.font
+
+  buttons.index = buttons.index + 1
+
+  return buttonInfo
+end
+
+function updateDisplay(firstTime)
+  for k, v in pairs(buttons) do
+    if k ~= 'index' and k ~= 'values' and k ~= 'params' and k ~= 'targetFunc' then
+      buttons[k].display.label = buttons.values[k]
+      if firstTime then
+        self.createButton(buttons[k].display)
+      else
+        self.editButton(buttons[k].display)
+      end
+    end
+  end
+end
+
+function setPlayerNum()
+  if playerNum < 6 then
+    playerNum = playerNum + 1
+  elseif playerNum == 6 then
+    playerNum = 1
+  end
+
+  buttons.values.setPlayerNum = 'Players: ' .. playerNum
+  updateDisplay(false)
+
+end
+
+function createGame()
+  deckNum = playerNum + 2
+  local params = {playerNum, deckNum}
+
+  Global.call('createGame', params)
+end
+
+function shuffleAll()
+  Global.call('shuffleAll')
+end
+
+function endGame()
+  local params = {'board'}
+  Global.call('returnCards', params)
+end
+
+function clearDiscard()
+  local params = {'discard'}
+  Global.call('returnCards', params)
+end
